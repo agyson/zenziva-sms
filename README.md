@@ -7,7 +7,7 @@
 Run [composer](http://getcomposer.org)
 
 ```bash
-composer require agyson/zenziva-sms
+composer require agyson/zenziva-sms:dev-master
 ```
 
 ## Usage
