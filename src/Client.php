@@ -120,11 +120,11 @@ class Client
     /**
      * Set masking
      *
-     * @param boolean $masking  Masking
+     * @param boolean $otp  OTP or Not
      *
      * @return self
      */
-    public function masking($masking = true, $otp = false)
+    public function masking($otp = false)
     {
         $this->layanan = 'masking';
         $this->method = $otp ? 'sendOTP' : 'sendsms';
@@ -132,6 +132,51 @@ class Client
         return $this;
     }
 
+    /**
+     * Set SMS Reguler
+     *
+     * @param boolean $otp  OTP or Not
+     *
+     * @return self
+     */
+
+     public function reguler($otp = false)
+     {
+         $this->layanan = 'reguler';
+         $this->method = $otp ? 'sendOTP' : 'sendsms';
+
+         return $this;
+     }
+
+    /**
+     * Set WA Reguler
+     *
+     *
+     * @return self
+     */
+
+     public function waReguler()
+     {
+         $this->layanan = 'wareguler';
+         $this->method = 'sendWA';
+
+         return $this;
+     }
+
+    /**
+     * Set Text To Voice
+     *
+     *
+     * @return self
+     */
+
+     public function textToVoice()
+     {
+         $this->layanan = 'voice';
+         $this->method = 'sendvoice';
+
+         return $this;
+     }
 
     /**
      * @param $to  Phone number
@@ -172,12 +217,19 @@ class Client
             'timeout' => self::TIMEOUT,
         ];
 
-        return Requests::post($url, [], [
+        $content = [
             'userkey' => $this->username,
             'passkey' => $this->password,
             'to'    => $this->to,
             'message'   => $this->text,
-        ]);
+        ];
+
+        if ($this->layanan == 'reguler' && $this->method == "sendOTP") {
+          $content['kode_otp'] = $this->text;
+          unset($content['message']);
+        }
+
+        return Requests::post($url, [], $content);
 
         // return Requests::get($url, [], $options);
     }
