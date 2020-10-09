@@ -7,17 +7,13 @@ use Requests;
 class Client
 {
     const TIMEOUT = 60;
-    const TYPE_OTP = 'otp';
-    const SCHEME = 'https';
-    const SUBDOMAIN_REGULER = 'reguler';
-    const SUBDOMAIN_MASKING = 'alpha';
 
     /**
      * Zenziva end point
      *
      * @var string
      */
-    protected $url = '{scheme}://{subdomain}.zenziva.net/apps/smsapi.php';
+    protected $url = 'https://console.zenziva.net/{layanan}/api/{method}';
 
     /**
      * Zenziva username
@@ -48,25 +44,18 @@ class Client
     public $text;
 
     /**
-     * Sub-domain
+     * Layanan
      *
      * @var string
      */
-    public $subdomain = 'reguler';
+    public $layanan;
 
     /**
-     * URL scheme
+     * Method
      *
      * @var string
      */
-    public $scheme = 'https';
-
-    /**
-     * SMS type. OTP or not.
-     *
-     * @var string
-     */
-    public $type;
+    public $method;
 
     /**
      * Create the instance
@@ -129,60 +118,20 @@ class Client
     }
 
     /**
-     * Set sub-domain
-     *
-     * @param $subdomain  Sub-domain
-     *
-     * @return self
-     */
-    public function subdomain($subdomain)
-    {
-        $this->subdomain = $subdomain;
-
-        return $this;
-    }
-
-    /**
      * Set masking
      *
      * @param boolean $masking  Masking
      *
      * @return self
      */
-    public function masking($masking = true)
+    public function masking($masking = true, $otp = false)
     {
-        $this->subdomain = $masking ? self::SUBDOMAIN_MASKING : self::SUBDOMAIN_REGULER;
+        $this->layanan = 'masking';
+        $this->method = $otp ? 'sendOTP' : 'sendsms';
 
         return $this;
     }
 
-    /**
-     * Set as OTP
-     *
-     * @param boolean $otp  OTP
-     *
-     * @return self
-     */
-    public function otp($otp = true)
-    {
-        $this->type = $otp ? self::TYPE_OTP : null;
-
-        return $this;
-    }
-
-    /**
-     * Set URL scheme
-     *
-     * @param $scheme  scheme
-     *
-     * @return self
-     */
-    public function scheme($scheme)
-    {
-        $this->scheme = $scheme == 'http' ? 'http' : self::SCHEME;
-
-        return $this;
-    }
 
     /**
      * @param $to  Phone number
@@ -226,9 +175,8 @@ class Client
         return Requests::post($url, [], [
             'userkey' => $this->username,
             'passkey' => $this->password,
-            'tipe'    => $this->type,
-            'nohp'    => $this->to,
-            'pesan'   => $this->text,
+            'to'    => $this->to,
+            'message'   => $this->text,
         ]);
 
         // return Requests::get($url, [], $options);
@@ -241,29 +189,26 @@ class Client
      */
     protected function buildQuery()
     {
-        if (empty($this->subdomain)) {
-            throw new \Exception('Sub domain is not set.');
-        }
+        $url = str_replace('{layanan}', $this->layanan, $this->url);
+        $url = str_replace('{method}', $this->method, $url);
 
-        $url = str_replace('{subdomain}', $this->subdomain, $this->url);
-        $url = str_replace('{scheme}', $this->scheme, $url);
+        // $type = [];
+        // if ($this->type) {
+        //     $type = [
+        //         'type' => $this->type,
+        //     ];
+        // }
+        //
+        // $params = http_build_query(array_merge([
+        //     'userkey' => $this->username,
+        //     'passkey' => $this->password,
+        //     'to'    => $this->to,
+        //     'message'   => $this->text,
+        // ], $type));
+        //
+        // $params = urldecode($params);
 
-        $type = [];
-        if ($this->type) {
-            $type = [
-                'type' => $this->type,
-            ];
-        }
-
-        $params = http_build_query(array_merge([
-            'userkey' => $this->username,
-            'passkey' => $this->password,
-            'nohp'    => $this->to,
-            'pesan'   => $this->text,
-        ], $type));
-
-        $params = urldecode($params);
-
-        return $url . '?' . $params;
+        // return $url . '?' . $params;
+        return $url;
     }
 }
